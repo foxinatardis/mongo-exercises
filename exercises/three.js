@@ -5,27 +5,22 @@ module.exports = function(mongoose, Checkout, Movie) {
 				_id: "$movieId",
 				count: {$sum: 1}
 			}
-		},
-		(err, data) => {
-			var max = 0;
-			var ids = [];
-			var titles = [];
-			for (var d in data) {
-				if(data[d].count > max) {
-					max = data[d].count;
-				}
-			}
-			for (var d in data) {
-				if(data[d].count === max) {
-					ids.push(data[d]._id);
-				}
-			}
-			Movie.find({_id: {$in: ids}}, "title", (err, data) => {
-				for (var d in data) {
-					titles.push(data[d].title);
-				}
-				console.log("Most checked out movies are: " + titles);
-			});
 		}
-	);
+	).sort("-count").exec((err, data) => {
+		var most = [];
+		var titles = [];
+		for (var d in data) {
+			if(data[d].count === data[0].count) {
+				most.push(data[d]._id);
+			} else {
+				break;
+			}
+		}
+		Movie.find({_id: {$in: most}}, {"title": 1}).exec( (err, data) => {
+			for (var d in data) {
+				titles.push(data[d].title);
+			}
+			console.log("Most checked out movies are: " + titles);
+		});
+	});
 };
